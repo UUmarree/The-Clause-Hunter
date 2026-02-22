@@ -1,0 +1,31 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / Editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Machine Learning Artifacts (Never commit heavy models to Git!)
+ml_pipeline/artifacts/*.pt
+ml_pipeline/artifacts/*.onnx
+ml_pipeline/artifacts/*.pkl
+*.h5
+*.weights
