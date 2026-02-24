@@ -25,9 +25,8 @@ async def get_extraction_result(task_id: str):
     """
     Endpoint to check the status of the extraction process and retrieve results.
     """
-    # For demonstration, we'll return a dummy response. 
+    # For demonstration, return a dummy response. 
     return TaskResponse(
         task_id=task_id,
-        status="completed",
-       
+        status="completed",        
     )
