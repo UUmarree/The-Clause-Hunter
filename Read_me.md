@@ -29,3 +29,23 @@ cd "The Clause Hunter"
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
+2. Start the Redis Message Broker (Requires Docker)
+
+Bash
+docker run -d -p 6379:6379 --name clause-redis redis:alpine
+3. Start the FastAPI Web Server
+Open a terminal, ensure your venv is active, and run:
+
+Bash
+uvicorn app.main:app --reload --port 8080
+4. Start the Celery Background Worker
+Open a new terminal tab, activate the venv, and run (Note: -P solo is required for Windows execution):
+
+Bash
+celery -A app.worker.celery_app.celery_task_app worker --loglevel=info -P solo
+📡 API Endpoints
+Once running, access the interactive Swagger UI at: http://127.0.0.1:8080/docs
+
+POST /api/v1/extract: Upload a .pdf document. Returns a 202 Accepted and a task_id.
+
+GET /api/v1/extract/{task_id}: Poll this endpoint to check status. Returns 200 OK with the extracted JSON dictionary upon completion.
