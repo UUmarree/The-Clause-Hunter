@@ -1,32 +1,29 @@
-#python functions that run our ml models in the background using celery
-import time
 import os
 from app.worker.celery_app import celery_task_app
-@celery_task_app.task(name="app.worker.tasks.extract_information_task")
-def extract_information_task(file_path: str) -> dict:
+
+# Import our instantiated ML model
+from ml_pipeline.inference import inference_engine
+
+@celery_task_app.task(bind=True, name="extract_document_task")
+def extract_document_task(self, file_path: str, original_filename: str):
     """
-    Simulates the extraction of information from a document.
-    In a real implementation, this would involve processing the file and extracting relevant data.
+    Executes the machine learning pipeline on the uploaded document.
     """
-    # Simulate a time-consuming task
-    time.sleep(10)  # Simulate processing time
-    print("Finished processing file:", file_path)
-    # Return dummy extracted data
-    return {
-        "document_metadata": {
-            "num_pages": 14,
-            "file_name": os.path.basename(file_path)
-        },
-        "extracted_entities": {
-            "policy_holder": "Jane Doe",
-            "premium_amount": 1450.00,
-            "effective_date": "2026-03-01"
-        },
-        "detected_clauses": [
-            {
-                "clause_type": "liability_limit",
-                "extracted_text": "The maximum bodily injury liability limit is $100,000 per person.",
-                "confidence_score": 0.96
-            }
-        ]
-    }
+    print(f"📥 Worker received file: {original_filename}")
+    
+    try:
+        # Pass the file to the ML pipeline
+        print("🧠 Running ML Inference...")
+        extraction_results = inference_engine.predict(file_path, original_filename)
+        
+        # MLOps Cleanup: Delete the temporary PDF from the server so we don't run out of disk space!
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+        print("✅ Extraction complete!")
+        return extraction_results
+        
+    except Exception as e:
+        print(f"❌ ML Pipeline failed: {str(e)}")
+        # If it fails, raise the exception so Celery marks the task as 'FAILURE'
+        raise e

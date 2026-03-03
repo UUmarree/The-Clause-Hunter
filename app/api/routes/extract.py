@@ -3,7 +3,8 @@ from app.schemas.document import TaskResponse
 import uuid
 from celery.result import AsyncResult
 from app.worker.celery_app import celery_task_app
-from app.worker.tasks import extract_information_task
+from app.worker.tasks import extract_document_task  # renamed task defined in worker
+
 import os
 import shutil
 
@@ -37,8 +38,8 @@ async def extract_information(file: UploadFile = File(...)):
         except IOError as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to save file: {str(e)}")
         
-        #5. Dispatch the extraction task to Celery
-        task = extract_information_task.delay(file_path)
+        #5. Dispatch the extraction task to Celery (pass original filename so ML model can include it)
+        task = extract_document_task.delay(file_path, file.filename)
 
         return TaskResponse(
             task_id=task.id,
@@ -63,6 +64,8 @@ async def get_extraction_result(task_id: str):
         return TaskResponse(task_id=task_id, status="processing", message="Task is currently being processed.")
     elif task_result.state == "SUCCESS":
         # In a real implementation, you would return the actual extracted data here.
+        print("🚨 REDIS PAYLOAD 🚨:", task_result.result)
+        print("🚨 PAYLOAD TYPE 🚨:", type(task_result.result))
         return TaskResponse(task_id=task_id, status="completed", message="Task completed successfully. Extracted data is ready.")
     elif task_result.state == "FAILURE":
         return TaskResponse(task_id=task_id, status="failed", message="Task failed during processing.")

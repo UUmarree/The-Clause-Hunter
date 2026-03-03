@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime
 
 class DocumentMetadata(BaseModel):
@@ -22,8 +22,9 @@ class ExtractionResult(BaseModel):
     detected_clauses: List[DetectedClause]
 
 class TaskResponse(BaseModel):
-    task_id: str = Field(..., description="Unique Celery task identifier")
-    status: str = Field(..., description="Current status: pending, processing, completed, or failed")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
-    result: Optional[ExtractionResult] = None
+    task_id: str
+    status: str
+    message: Optional[str] = None
+    # field is intentionally very loose; can hold whatever the ML worker returns
+    # using `Any` (not the built-in `any` function!) so we avoid schema errors
+    extracted_data: Optional[dict] = None
